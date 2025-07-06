@@ -1,95 +1,229 @@
-mixed-port: 7890
+port: 7890
+socks-port: 7891
 allow-lan: true
-bind-address: '*'
 mode: rule
 log-level: info
-ipv6: false
-
-external-controller: 0.0.0.0:9090
-external-ui: dashboard
-secret: ""
-
-dns:
-  enable: true
-  ipv6: false
-  enhanced-mode: redir-host
-  listen: 0.0.0.0:1053
-  nameserver:
-    - 223.5.5.5
-    - 8.8.8.8
-  fallback:
-    - tls://1.1.1.1:853
-    - tls://8.8.4.4:853
+external-controller: 127.0.0.1:9090
+secret: "your_secret_here"
+unified-delay: true
 
 proxy-providers:
-  my-subscription:
+  airport:
     type: http
-    url: "https://example.com/your-subscription-link"  # ✅ 在 OpenClash 中填写，不要上传真实地址
-    interval: 3600
-    path: ./proxy_providers/my-subscription.yaml
+    url: "" # ⚠️此处保留空，你在 OpenClash 上传后填入订阅地址
+    interval: 86400
+    path: ./providers/airport.yaml
     health-check:
       enable: true
-      interval: 600
+      interval: 300
       url: http://www.gstatic.com/generate_204
 
 proxy-groups:
-  - name: 🚀 节点选择
+  - name: 节点选择
     type: select
-    proxies:
-      - 🔁 故障转移
-      - ♻️ 自动选择
-      - DIRECT
+    proxies: [故障转移, 高速公网, 🇭🇰 香港, 🇯🇵 日本, 🇺🇸 美国, 🇸🇬 新加坡, 🇹🇼 台湾, 手动选择, DIRECT]
 
-  - name: 🔁 故障转移
+  - name: 故障转移
     type: fallback
     url: http://www.gstatic.com/generate_204
     interval: 300
-    use:
-      - my-subscription
+    proxies: [🇭🇰 香港, 🇯🇵 日本, 🇺🇸 美国, 🇸🇬 新加坡, 🇹🇼 台湾, 手动选择]
 
-  - name: ♻️ 自动选择
+  - name: 高速公网
     type: url-test
     url: http://www.gstatic.com/generate_204
     interval: 300
-    use:
-      - my-subscription
+    proxies: [🇭🇰 香港, 🇯🇵 日本, 🇺🇸 美国, 🇸🇬 新加坡, 🇹🇼 台湾, 手动选择]
 
-  - {name: auto 🇭🇰 香港, type: url-test, use: [my-subscription], filter: "(?i)(香港|Hong Kong|HK)", interval: 300}
-  - {name: auto 🇯🇵 日本, type: url-test, use: [my-subscription], filter: "(?i)(日本|JP|Japan)", interval: 300}
-  - {name: auto 🇺🇸 美国, type: url-test, use: [my-subscription], filter: "(?i)(美国|US|United States|America)", interval: 300}
-  - {name: auto 🇸🇬 新加坡, type: url-test, use: [my-subscription], filter: "(?i)(新加坡|Singapore|狮城|SG)", interval: 300}
-  - {name: auto 🇹🇼 台湾, type: url-test, use: [my-subscription], filter: "(?i)(台湾|Taiwan|TW)", interval: 300}
-  - {name: 手动 🧊 其他冷门地区, type: select, use: [my-subscription], filter: "^(?!(.*新加坡|.*香港|.*日本|.*美国|.*台湾)).*$"}
+  - { name: 🇭🇰 香港, type: url-test, use: [airport], filter: "(?i)港|hk", url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 🇯🇵 日本, type: url-test, use: [airport], filter: "(?i)日本|jp", url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 🇺🇸 美国, type: url-test, use: [airport], filter: "(?i)美|us", url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 🇸🇬 新加坡, type: url-test, use: [airport], filter: "(?i)新加坡|sg", url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 🇹🇼 台湾, type: url-test, use: [airport], filter: "(?i)台|tw", url: http://www.gstatic.com/generate_204, interval: 300 }
+  - { name: 手动选择, type: select, use: [airport] }
 
-  - name: 📱 openai 应用
-    type: select
-    proxies:
-      - auto 🇯🇵 日本
-      - auto 🇺🇸 美国
-      - auto 🇸🇬 新加坡
-      - auto 🇭🇰 香港
-      - auto 🇹🇼 台湾
-      - 手动 🧊 其他冷门地区
-      - DIRECT
-      - REJECT
-
-  - name: GLOBAL
-    type: select
-    proxies:
-      - 🚀 节点选择
-      - DIRECT
-      - REJECT
+  # 应用策略组（按你的列表）
+  - { name: 📱 openai 应用, type: select, proxies: [🇺🇸 美国, 🇯🇵 日本, 手动选择, DIRECT] }
+  - { name: 📱 youtube 应用, type: select, proxies: [🇺🇸 美国, 🇯🇵 日本, 手动选择, DIRECT] }
+  - { name: 📱 telegram 应用, type: select, proxies: [🇺🇸 美国, 🇭🇰 香港, 手动选择, DIRECT] }
+  - { name: 📱 netflix 应用, type: select, proxies: [🇺🇸 美国, 🇯🇵 日本, 手动选择, DIRECT] }
+  - { name: 📱 tiktok 应用, type: select, proxies: [🇯🇵 日本, 🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 github 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 apple 应用, type: select, proxies: [DIRECT, 手动选择, 🇭🇰 香港] }
+  - { name: 📱 microsoft 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 google 应用, type: select, proxies: [🇺🇸 美国, 🇯🇵 日本, 手动选择, DIRECT] }
+  - { name: 📱 notion 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 gemini 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 x 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 binance 应用, type: select, proxies: [🇸🇬 新加坡, 🇭🇰 香港, 手动选择, DIRECT] }
+  - { name: 📱 okx 应用, type: select, proxies: [🇸🇬 新加坡, 🇭🇰 香港, 手动选择, DIRECT] }
+  - { name: 📱 bitget 应用, type: select, proxies: [🇸🇬 新加坡, 🇭🇰 香港, 手动选择, DIRECT] }
+  - { name: 📱 claude 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 proton 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 adobe 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 facebook 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
+  - { name: 📱 instagram 应用, type: select, proxies: [🇺🇸 美国, 手动选择, DIRECT] }
 
 rule-providers:
-  reject:
+  openai:
     type: http
-    behavior: domain
-    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt
-    path: ./ruleset/reject.yaml
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/openai.yaml"
+    path: ./ruleset/openai.yaml
+    interval: 86400
+
+  youtube:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/youtube.yaml"
+    path: ./ruleset/youtube.yaml
+    interval: 86400
+
+  telegram:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegram.yaml"
+    path: ./ruleset/telegram.yaml
+    interval: 86400
+
+  github:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/github.yaml"
+    path: ./ruleset/github.yaml
+    interval: 86400
+
+  netflix:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/netflix.yaml"
+    path: ./ruleset/netflix.yaml
+    interval: 86400
+
+  tiktok:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tiktok.yaml"
+    path: ./ruleset/tiktok.yaml
+    interval: 86400
+
+  apple:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.yaml"
+    path: ./ruleset/apple.yaml
+    interval: 86400
+
+  microsoft:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/microsoft.yaml"
+    path: ./ruleset/microsoft.yaml
+    interval: 86400
+
+  google:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.yaml"
+    path: ./ruleset/google.yaml
+    interval: 86400
+
+  notion:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/notion.yaml"
+    path: ./ruleset/notion.yaml
+    interval: 86400
+
+  gemini:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gemini.yaml"
+    path: ./ruleset/gemini.yaml
+    interval: 86400
+
+  x:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/twitter.yaml"
+    path: ./ruleset/x.yaml
+    interval: 86400
+
+  binance:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/binance.yaml"
+    path: ./ruleset/binance.yaml
+    interval: 86400
+
+  okx:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/okx.yaml"
+    path: ./ruleset/okx.yaml
+    interval: 86400
+
+  bitget:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/bitget.yaml"
+    path: ./ruleset/bitget.yaml
+    interval: 86400
+
+  claude:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/claude.yaml"
+    path: ./ruleset/claude.yaml
+    interval: 86400
+
+  proton:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proton.yaml"
+    path: ./ruleset/proton.yaml
+    interval: 86400
+
+  adobe:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/adobe.yaml"
+    path: ./ruleset/adobe.yaml
+    interval: 86400
+
+  facebook:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/facebook.yaml"
+    path: ./ruleset/facebook.yaml
+    interval: 86400
+
+  instagram:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/instagram.yaml"
+    path: ./ruleset/instagram.yaml
     interval: 86400
 
 rules:
-  - DOMAIN-SUFFIX,openai.com,📱 openai 应用
-  - DOMAIN-KEYWORD,openai,📱 openai 应用
-  - RULE-SET,reject,REJECT
-  - MATCH,GLOBAL
+  - RULE-SET,openai,📱 openai 应用
+  - RULE-SET,youtube,📱 youtube 应用
+  - RULE-SET,telegram,📱 telegram 应用
+  - RULE-SET,github,📱 github 应用
+  - RULE-SET,netflix,📱 netflix 应用
+  - RULE-SET,tiktok,📱 tiktok 应用
+  - RULE-SET,apple,📱 apple 应用
+  - RULE-SET,microsoft,📱 microsoft 应用
+  - RULE-SET,google,📱 google 应用
+  - RULE-SET,notion,📱 notion 应用
+  - RULE-SET,gemini,📱 gemini 应用
+  - RULE-SET,x,📱 x 应用
+  - RULE-SET,binance,📱 binance 应用
+  - RULE-SET,okx,📱 okx 应用
+  - RULE-SET,bitget,📱 bitget 应用
+  - RULE-SET,claude,📱 claude 应用
+  - RULE-SET,proton,📱 proton 应用
+  - RULE-SET,adobe,📱 adobe 应用
+  - RULE-SET,facebook,📱 facebook 应用
+  - RULE-SET,instagram,📱 instagram 应用
+  - MATCH,节点选择
