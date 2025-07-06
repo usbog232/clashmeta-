@@ -1,126 +1,93 @@
+# Clash Meta 全量配置模板（含订阅、策略组、规则集、DNS等）
+
+# ==================== 通用设置 ====================
+port: 7890
+socks-port: 7891
+redir-port: 7892
+tproxy-port: 7893
 mixed-port: 7890
 allow-lan: true
-log-level: info
-ipv6: false
 mode: rule
+log-level: info
 external-controller: 127.0.0.1:9090
+secret: ""
 bind-address: "*"
-tcp-concurrent: true
+unified-delay: true
+ipv6: false
 
+# ==================== DNS 设置 ====================
 dns:
   enable: true
   ipv6: false
-  listen: 0.0.0.0:53
   enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - 'localhost'
   nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
   fallback:
-    - https://dns.google/dns-query
-    - https://1.1.1.1/dns-query
+    - tls://1.1.1.1:853
+    - tls://8.8.4.4:853
   fallback-filter:
     geoip: true
     geoip-code: CN
-    ipcidr:
-      - 240.0.0.0/4
 
+# ==================== 订阅节点（OpenClash 会自动插入） ====================
 proxy-providers:
-  airport:
+  Airport:
     type: http
-    url: "https://example.com/clash-subscribe.yaml"
-    interval: 3600
-    path: ./providers/airport.yaml
+    url: "__SUBSCRIPTION_URL__"  # ← 这里由 OpenClash 动态替换
+    interval: 86400
+    path: ./proxy_provider/Airport.yaml
     health-check:
       enable: true
-      interval: 300
+      interval: 600
       url: http://www.gstatic.com/generate_204
 
+# ==================== 策略组 ====================
 proxy-groups:
-  - name: 🚀 节点选择
-    type: select
-    proxies:
-      - auto 🇯🇵 日本
-      - auto 🇺🇸 美国
-      - auto 🇸🇬 新加坡
-      - auto 🇭🇰 香港
-      - auto 🇹🇼 台湾
-      - 手动 🧊 其他冷门地区
-      - DIRECT
+  - {name: ♻️ 自动选择, type: url-test, use: [Airport], url: "http://www.gstatic.com/generate_204", interval: 300}
+  - {name: 📺 NETFLIX, type: select, proxies: [♻️ 自动选择, DIRECT]}
+  - {name: 📰 国外媒体, type: select, proxies: [♻️ 自动选择, DIRECT]}
+  - {name: 🐟 漏网之鱼, type: select, proxies: [♻️ 自动选择, DIRECT]}
+  - {name: 🌏 全球直连, type: select, proxies: [DIRECT, ♻️ 自动选择]}
 
-  # 区域测速自动组
-  - {name: auto 🇸🇬 新加坡, type: url-test, use: [airport], filter: "(?i)(新加坡|Singapore|SG)", interval: 300}
-  - {name: auto 🇭🇰 香港, type: url-test, use: [airport], filter: "(?i)(香港|Hong Kong|HK)", interval: 300}
-  - {name: auto 🇯🇵 日本, type: url-test, use: [airport], filter: "(?i)(日本|Japan|JP)", interval: 300}
-  - {name: auto 🇺🇸 美国, type: url-test, use: [airport], filter: "(?i)(美国|America|US)", interval: 300}
-  - {name: auto 🇹🇼 台湾, type: url-test, use: [airport], filter: "(?i)(台湾|Taiwan|TW)", interval: 300}
-  - {name: 手动 🧊 其他冷门地区, type: select, use: [airport], filter: "^(?!(.*新加坡|.*香港|.*日本|.*美国|.*台湾)).*$"}
+# 区域自动策略组（根据你提供的结构）
+  - {name: auto 🇸🇬 新加坡, type: url-test, include-all: true, filter: "(?i)(新加坡|狮城|Singapore|SG)", interval: 300, tolerance: 20}
+  - {name: auto 🇭🇰 香港, type: url-test, include-all: true, filter: "(?i)(香港|Hong Kong|HK)", interval: 300, tolerance: 20}
+  - {name: auto 🇯🇵 日本, type: url-test, include-all: true, filter: "(?i)(日本|JP|Japan)", interval: 300, tolerance: 20}
+  - {name: auto 🇺🇸 美国, type: url-test, include-all: true, filter: "(?i)(美国|US|United States|America)", interval: 300, tolerance: 20}
+  - {name: auto 🇹🇼 台湾, type: url-test, include-all: true, filter: "(?i)(台湾|TW|Taiwan)", interval: 300, tolerance: 20}
+  - {name: 手动 🧊 其他冷门地区, type: select, include-all: true, filter: "^(?!(.*新加坡|.*香港|.*日本|.*美国|.*台湾)).*$"}
 
-  # 应用策略组（可自由增删）
-  - {name: 📱 openai 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 youtube 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 telegram 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 netflix 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 tiktok 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 github 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 apple 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 microsoft 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 google 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 notion 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 gemini 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 x 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 binance 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 okx 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 bitget 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 claude 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 proton 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 adobe 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 facebook 应用, type: select, proxies: [🚀 节点选择]}
-  - {name: 📱 instagram 应用, type: select, proxies: [🚀 节点选择]}
+# 📱 应用策略组（以 OpenAI 为例，其它同理）
+  - {name: 📱 openai 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 youtube 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 telegram 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 netflix 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+
+# ==================== 规则集定义 ====================
+rule-anchor:
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
+  class: &class {type: http, interval: 86400, behavior: classical, format: text}
 
 rule-providers:
-  geosite-openai:
-    type: http
-    behavior: domain
-    format: mrs
-    interval: 86400
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs
-  geosite-youtube:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs
-  geosite-telegram:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs
-  geosite-github:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs
-  geosite-google:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
-  geosite-apple:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs
-  geosite-microsoft:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs
-  geosite-cn:
-    <<: *domain
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
-  geoip-cn:
-    type: http
-    behavior: ipcidr
-    format: mrs
-    interval: 86400
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+  netflix_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"}
+  openai_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs"}
+  telegram_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"}
+  gfw_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs"}
+  cn_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"}
+  cn_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs"}
 
+# ==================== 分流规则 ====================
 rules:
-  - RULE-SET,geosite-openai,📱 openai 应用
-  - RULE-SET,geosite-youtube,📱 youtube 应用
-  - RULE-SET,geosite-telegram,📱 telegram 应用
-  - RULE-SET,geosite-github,📱 github 应用
-  - RULE-SET,geosite-google,📱 google 应用
-  - RULE-SET,geosite-apple,📱 apple 应用
-  - RULE-SET,geosite-microsoft,📱 microsoft 应用
-  - RULE-SET,geosite-cn,DIRECT
-  - RULE-SET,geoip-cn,DIRECT
-  - MATCH,🚀 节点选择
+  - DOMAIN-SUFFIX,local,DIRECT
+  - RULE-SET,netflix_domain,📱 netflix 应用
+  - RULE-SET,openai_domain,📱 openai 应用
+  - RULE-SET,telegram_domain,📱 telegram 应用
+  - RULE-SET,gfw_domain,♻️ 自动选择
+  - RULE-SET,cn_domain,DIRECT
+  - RULE-SET,cn_ip,DIRECT
+  - MATCH,🐟 漏网之鱼
