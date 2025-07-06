@@ -1,107 +1,95 @@
 mixed-port: 7890
 allow-lan: true
+bind-address: '*'
 mode: rule
 log-level: info
-external-controller: 127.0.0.1:9090
+ipv6: false
+
+external-controller: 0.0.0.0:9090
+external-ui: dashboard
 secret: ""
-bind-address: "*"
 
 dns:
   enable: true
   ipv6: false
   enhanced-mode: redir-host
+  listen: 0.0.0.0:1053
   nameserver:
     - 223.5.5.5
     - 8.8.8.8
-    - https://dns.alidns.com/dns-query
   fallback:
-    - https://dns.google/dns-query
-  fallback-filter:
-    geoip: true
-    ipcidr:
-      - 240.0.0.0/4
+    - tls://1.1.1.1:853
+    - tls://8.8.4.4:853
 
 proxy-providers:
-  my_subscribe:
+  my-subscription:
     type: http
-    url: "https://你的订阅地址"
+    url: "https://example.com/your-subscription-link"  # ✅ 在 OpenClash 中填写，不要上传真实地址
     interval: 3600
-    path: ./providers/proxies/my.yaml
+    path: ./proxy_providers/my-subscription.yaml
     health-check:
       enable: true
       interval: 600
       url: http://www.gstatic.com/generate_204
 
 proxy-groups:
-  - {name: 🚀 节点选择, type: select, use: [my_subscribe]}
-  - {name: 🛑 故障转移, type: fallback, use: [my_subscribe], url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🚄 高速公网, type: url-test, use: [my_subscribe], url: http://www.gstatic.com/generate_204, interval: 300, tolerance: 50}
+  - name: 🚀 节点选择
+    type: select
+    proxies:
+      - 🔁 故障转移
+      - ♻️ 自动选择
+      - DIRECT
 
-# 🌍 地区测速策略组
-  - {name: 🇭🇰 香港, type: url-test, use: [my_subscribe], filter: "(?i)香港|hongkong|hk", url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🇯🇵 日本, type: url-test, use: [my_subscribe], filter: "(?i)日本|japan|jp", url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🇸🇬 新加坡, type: url-test, use: [my_subscribe], filter: "(?i)新加坡|singapore|sg", url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🇺🇸 美国, type: url-test, use: [my_subscribe], filter: "(?i)美国|usa|us", url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🇹🇼 台湾, type: url-test, use: [my_subscribe], filter: "(?i)台湾|taiwan|tw", url: http://www.gstatic.com/generate_204, interval: 300}
-  - {name: 🌐 其他地区, type: select, use: [my_subscribe], filter: "^(?!.*(香港|日本|新加坡|美国|台湾)).*"}
+  - name: 🔁 故障转移
+    type: fallback
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    use:
+      - my-subscription
 
-# 📱 应用策略组（全部统一结构）
-{% for app in [
-"openai", "youtube", "telegram", "netflix", "tiktok", "github", "apple", "microsoft", "google",
-"notion", "gemini", "x", "binance", "okx", "bitget", "claude", "proton", "adobe", "facebook", "instagram"
-] %}
-  - {name: 📱 {{ app | upper }} 应用, type: select, proxies: [🇯🇵 日本, 🇺🇸 美国, 🇸🇬 新加坡, 🇭🇰 香港, 🇹🇼 台湾, 🌐 其他地区, DIRECT, REJECT]}
-{% endfor %}
+  - name: ♻️ 自动选择
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    use:
+      - my-subscription
 
-rule-anchor:
-  ip: &ip {type: http, behavior: ipcidr, format: mrs, interval: 86400}
-  domain: &domain {type: http, behavior: domain, format: mrs, interval: 86400}
+  - {name: auto 🇭🇰 香港, type: url-test, use: [my-subscription], filter: "(?i)(香港|Hong Kong|HK)", interval: 300}
+  - {name: auto 🇯🇵 日本, type: url-test, use: [my-subscription], filter: "(?i)(日本|JP|Japan)", interval: 300}
+  - {name: auto 🇺🇸 美国, type: url-test, use: [my-subscription], filter: "(?i)(美国|US|United States|America)", interval: 300}
+  - {name: auto 🇸🇬 新加坡, type: url-test, use: [my-subscription], filter: "(?i)(新加坡|Singapore|狮城|SG)", interval: 300}
+  - {name: auto 🇹🇼 台湾, type: url-test, use: [my-subscription], filter: "(?i)(台湾|Taiwan|TW)", interval: 300}
+  - {name: 手动 🧊 其他冷门地区, type: select, use: [my-subscription], filter: "^(?!(.*新加坡|.*香港|.*日本|.*美国|.*台湾)).*$"}
+
+  - name: 📱 openai 应用
+    type: select
+    proxies:
+      - auto 🇯🇵 日本
+      - auto 🇺🇸 美国
+      - auto 🇸🇬 新加坡
+      - auto 🇭🇰 香港
+      - auto 🇹🇼 台湾
+      - 手动 🧊 其他冷门地区
+      - DIRECT
+      - REJECT
+
+  - name: GLOBAL
+    type: select
+    proxies:
+      - 🚀 节点选择
+      - DIRECT
+      - REJECT
 
 rule-providers:
-  cn_ip: {<<: *ip, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs}
-  gfw: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs}
-  openai_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs}
-  youtube_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs}
-  telegram_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs}
-  netflix_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs}
-  tiktok_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs}
-  github_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs}
-  apple_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs}
-  microsoft_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs}
-  google_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs}
-  notion_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/notion.mrs}
-  gemini_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gemini.mrs}
-  x_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs}
-  binance_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/binance.mrs}
-  okx_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/okx.mrs}
-  bitget_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bitget.mrs}
-  claude_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/claude.mrs}
-  proton_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/proton.mrs}
-  adobe_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/adobe.mrs}
-  facebook_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs}
-  instagram_domain: {<<: *domain, url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/instagram.mrs}
+  reject:
+    type: http
+    behavior: domain
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt
+    path: ./ruleset/reject.yaml
+    interval: 86400
 
 rules:
-  - RULE-SET,openai_domain,📱 OPENAI 应用
-  - RULE-SET,youtube_domain,📱 YOUTUBE 应用
-  - RULE-SET,telegram_domain,📱 TELEGRAM 应用
-  - RULE-SET,netflix_domain,📱 NETFLIX 应用
-  - RULE-SET,tiktok_domain,📱 TIKTOK 应用
-  - RULE-SET,github_domain,📱 GITHUB 应用
-  - RULE-SET,apple_domain,📱 APPLE 应用
-  - RULE-SET,microsoft_domain,📱 MICROSOFT 应用
-  - RULE-SET,google_domain,📱 GOOGLE 应用
-  - RULE-SET,notion_domain,📱 NOTION 应用
-  - RULE-SET,gemini_domain,📱 GEMINI 应用
-  - RULE-SET,x_domain,📱 X 应用
-  - RULE-SET,binance_domain,📱 BINANCE 应用
-  - RULE-SET,okx_domain,📱 OKX 应用
-  - RULE-SET,bitget_domain,📱 BITGET 应用
-  - RULE-SET,claude_domain,📱 CLAUDE 应用
-  - RULE-SET,proton_domain,📱 PROTON 应用
-  - RULE-SET,adobe_domain,📱 ADOBE 应用
-  - RULE-SET,facebook_domain,📱 FACEBOOK 应用
-  - RULE-SET,instagram_domain,📱 INSTAGRAM 应用
-  - RULE-SET,gfw,🚀 节点选择
-  - GEOIP,CN,DIRECT
-  - MATCH,🚀 节点选择
+  - DOMAIN-SUFFIX,openai.com,📱 openai 应用
+  - DOMAIN-KEYWORD,openai,📱 openai 应用
+  - RULE-SET,reject,REJECT
+  - MATCH,GLOBAL
