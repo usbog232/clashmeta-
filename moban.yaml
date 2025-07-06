@@ -1,0 +1,31 @@
+# 🌍 区域自动策略组
+proxy-groups:
+  - {name: auto 🇸🇬 新加坡, type: url-test, include-all: true, filter: "(?i)(新加坡|狮城|Singapore|SG)", interval: 300, tolerance: 20}
+  - {name: auto 🇭🇰 香港, type: url-test, include-all: true, filter: "(?i)(香港|Hong Kong|HK)", interval: 300, tolerance: 20}
+  - {name: auto 🇯🇵 日本, type: url-test, include-all: true, filter: "(?i)(日本|JP|Japan)", interval: 300, tolerance: 20}
+  - {name: auto 🇺🇸 美国, type: url-test, include-all: true, filter: "(?i)(美国|US|United States|America)", interval: 300, tolerance: 20}
+  - {name: auto 🇹🇼 台湾, type: url-test, include-all: true, filter: "(?i)(台湾|TW|Taiwan)", interval: 300, tolerance: 20}
+  - {name: 手动 🧊 其他冷门地区, type: select, include-all: true, filter: "^(?!(.*新加坡|.*香港|.*日本|.*美国|.*台湾)).*$"}
+
+# 📱 应用策略组
+
+  - {name: 📱 openai 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 youtube 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 telegram 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 tiktok 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 netflix 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 okx 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 binance 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 x 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 gemini 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 notion 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 claude 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 github 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 apple 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 proton 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 adobe 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 instagram 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 facebook 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 bitget 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 microsoft 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
+  - {name: 📱 google 应用, type: select, proxies: [auto 🇯🇵 日本, auto 🇺🇸 美国, auto 🇸🇬 新加坡, auto 🇭🇰 香港, auto 🇹🇼 台湾, 手动 🧊 其他冷门地区, DIRECT]}
